@@ -80,15 +80,14 @@ int DS18B20::fazScanProximo()
 int DS18B20::fazScan()
 {
 	int id_bit_number;
-	int last_zero, rom_byte_number, search_result;
-	int id_bit, cmp_id_bit;
-	unsigned char rom_byte_mask, search_direction;
+	int last_zero, rom_number, search_result;
+	int normal, complemento;
+	unsigned char rom_mask, search_direction;
 
-	// initialize for search
 	id_bit_number = 1;
 	last_zero = 0;
-	rom_byte_number = 0;
-	rom_byte_mask = 1;
+	rom_number = 0;
+	rom_mask = 1;
 	search_result = 0;
 
 	// if the last call was not the last one
@@ -108,26 +107,26 @@ int DS18B20::fazScan()
 		onewire->writeByte(0xF0);
 
 		// loop to do the search
-		do
+		while (rom_number < 8)
 		{
 			// read a bit and its complement
-			id_bit = onewire->readBit();
-			cmp_id_bit = onewire->readBit();
+			normal = onewire->readBit();
+			complemento = onewire->readBit();
 
 			// check for no devices on 1-wire
-			if ((id_bit == 1) && (cmp_id_bit == 1))
+			if ((normal == 1) && (complemento == 1))
 				break;
 			else
 			{
 				// all devices coupled have 0 or 1
-				if (id_bit != cmp_id_bit)
-					search_direction = id_bit; // bit write value for search
+				if (normal != complemento)
+					search_direction = normal; // bit write value for search
 				else
 				{
 					// if this discrepancy if before the Last Discrepancy
 					// on a previous next then pick the same as last time
 					if (id_bit_number < LastDiscrepancy)
-						search_direction = ((ROM_NO[rom_byte_number] & rom_byte_mask) > 0);
+						search_direction = ((address[rom_number] & rom_mask) > 0);
 					else
 						// if equal to last pick 1, if not then pick 0
 						search_direction = (id_bit_number == LastDiscrepancy);
@@ -146,9 +145,9 @@ int DS18B20::fazScan()
 				// set or clear the bit in the ROM byte rom_byte_number
 				// with mask rom_byte_mask
 				if (search_direction == 1)
-					ROM_NO[rom_byte_number] |= rom_byte_mask;
+					address[rom_number] |= rom_mask;
 				else
-					ROM_NO[rom_byte_number] &= ~rom_byte_mask;
+					address[rom_number] &= ~rom_mask;
 
 				// serial number search direction write bit
 				onewire->escreve_bit(search_direction);
@@ -156,17 +155,17 @@ int DS18B20::fazScan()
 				// increment the byte counter id_bit_number
 				// and shift the mask rom_byte_mask
 				id_bit_number++;
-				rom_byte_mask <<= 1;
+				rom_mask <<= 1;
 
 				// if the mask is 0 then go to new SerialNum byte rom_byte_number and reset mask
-				if (rom_byte_mask == 0)
+				if (rom_mask == 0)
 				{
-					docrc8(ROM_NO[rom_byte_number]); // accumulate the CRC
-					rom_byte_number++;
-					rom_byte_mask = 1;
+					docrc8(address[rom_number]); // accumulate the CRC
+					rom_number++;
+					rom_mask = 1;
 				}
 			}
-		} while (rom_byte_number < 8); // loop until through all ROM bytes 0-7
+		}
 
 		// if the search was successful then
 		if (!((id_bit_number < 65) || (crc8 != 0)))
@@ -183,7 +182,7 @@ int DS18B20::fazScan()
 	}
 
 	// if no device found then reset counters so next 'search' will be like a first
-	if (!search_result || !ROM_NO[0])
+	if (!search_result || !address[0])
 	{
 		LastDiscrepancy = 0;
 		LastDeviceFlag = FALSE;
@@ -193,10 +192,10 @@ int DS18B20::fazScan()
 
 	if (search_result)
 	{
-		printf("Codigo da Familia: %d\n", ROM_NO[0]);
-		printf("Numero de Serie  : %d %d %d %d %d %d\n", ROM_NO[1], ROM_NO[2], ROM_NO[3], ROM_NO[4], ROM_NO[5], ROM_NO[6]);
-		printf("CRC=             : %d\n", ROM_NO[7]);
-		printf("Endereco completo: %d %d %d %d %d %d %d %d\n", ROM_NO[0], ROM_NO[1], ROM_NO[2], ROM_NO[3], ROM_NO[4], ROM_NO[5], ROM_NO[6], ROM_NO[7]);
+		printf("Codigo da Familia: %d\n", address[0]);
+		printf("Numero de Serie  : %d %d %d %d %d %d\n", address[1], address[2], address[3], address[4], address[5], address[6]);
+		printf("CRC=             : %d\n", address[7]);
+		printf("Endereco completo: %d %d %d %d %d %d %d %d\n", address[0], address[1], address[2], address[3], address[4], address[5], address[6], address[7]);
 	}
 
 	return search_result;

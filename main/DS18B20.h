@@ -28,7 +28,7 @@ public:
 	int fazScanProximo();
 	int fazScan();
 	unsigned char docrc8(unsigned char value);
-	unsigned char ROM_NO[8];
+	unsigned char address[8];
 	int LastDiscrepancy = 0;
 	int LastFamilyDiscrepancy = 0;
 	int LastDeviceFlag = 0;

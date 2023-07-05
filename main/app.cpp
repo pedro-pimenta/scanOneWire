@@ -26,7 +26,7 @@ void printFloat(float f)
   printf(str);
 }
 
-unsigned char ROM_NO[8];
+unsigned char address[8];
 
 void app_main()
 {
@@ -47,7 +47,7 @@ void app_main()
   {
     // print device found
     for (i = 7; i >= 0; i--)
-      printf("%02X", ROM_NO[i]);
+      printf("%02X", address[i]);
     printf("  %d\n", ++cnt);
 
     rslt = meuSensor.fazScanProximo();
