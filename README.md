@@ -1,5 +1,3 @@
-# Hello World Example
+# ScanOneWire com ESP8266
 
-Starts a FreeRTOS task to print "Hello World"
-
-See the README.md file in the upper level 'examples' directory for more information about examples.
+Trabalho da disciplina de Sistemas digitais embarcados semestre 2023/1
