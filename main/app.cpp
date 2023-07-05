@@ -13,58 +13,43 @@ CRC=             : 18
 #include "serial.h"
 #include "DS18B20.h"
 #include "delay.h"
-#include <inttypes.h> 
+#include <inttypes.h>
 #include "digital.h"
+#include <vector>
 
-float temperatura1;
-float temperatura2;
+extern "C" void app_main();
 
- 
-
-extern "C" void app_main() ;
-
-
-
-void printFloat (float f)
+void printFloat(float f)
 {
   char str[20];
- sprintf(str, "%d.%04d\n", (int)f, (int)(f*10000)%10000);
- printf(str);
-
+  sprintf(str, "%d.%04d\n", (int)f, (int)(f * 10000) % 10000);
+  printf(str);
 }
+
+unsigned char ROM_NO[8];
 
 void app_main()
 {
   delay_ms(2000);
   serial.begin(9600);
   printf("\n\nRODANDO\n\n");
+
+  int i;
+  // ROM_NO é um vetor de 8 bytes
+
   DS18B20 meuSensor = DS18B20(PIN16);
-  
- //char v1[]={29,3,24,151,121,79,26,40};
- //char v2[]={112,3,24,151,121,69,116,40};
- 
-    //meuSensor.init(v);
+
+  // find ALL devices
   printf("\nFIND ALL\n");
   int cnt = 0;
-  meuSensor.fazScan();
-  // print device found
+  int rslt = meuSensor.fazScanPrimeiro();
+  while (rslt)
+  {
+    // print device found
+    for (i = 7; i >= 0; i--)
+      printf("%02X", ROM_NO[i]);
+    printf("  %d\n", ++cnt);
 
-    /*for (int i = 7; i >= 0; i--)
-        printf("%02X", meuSensor.ROM_NO[i]);
-    printf("  %d\n",++cnt);*/
-  
-  
-  //meuSensor.fazScan();
-
- /*   while(1){
-      
-      temperatura1 = meuSensor.readTargetTemp(v1);
-      temperatura2 = meuSensor.readTargetTemp(v2);
-      printf("Sensor 1 ");printFloat(temperatura1);
-      printf("Sensor 2 ");printFloat(temperatura2);
-      delay_ms(500);
-
-    }
-  */
- }
-
+    rslt = meuSensor.fazScanProximo();
+  }
+}
